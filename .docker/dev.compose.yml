@@ -1,0 +1,17 @@
+services:
+
+ postgres:
+    container_name: postgres
+    image: postgres:17-bookworm
+    restart: always
+    environment:
+      POSTGRES_USER: talos
+      POSTGRES_PASSWORD: saxofoon
+      POSTGRES_DB: talos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres:
