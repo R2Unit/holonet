@@ -1,4 +1,3 @@
-// core/tasks/createAnsibleTask.go
 package tasks
 
 import (
@@ -26,7 +25,6 @@ func createAnsibleTask(params map[string]string) (queue.Task, error) {
 	return task, nil
 }
 
-// Automatically register the "ansible" task creator when this package is initialized.
 func init() {
 	RegisterTask("ansible", createAnsibleTask)
 }

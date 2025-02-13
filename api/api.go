@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/r2unit/talos-core/queue" // replace with your actual module path
+	"github.com/r2unit/talos-core/queue"
 	"github.com/r2unit/talos-core/tasks"
 )
 
