@@ -1,6 +1,6 @@
 package database
 
-import "github.com/quanza/talos-core/database/tables"
+import "github.com/r2unit/talos-core/database/tables"
 
 func GetTables() map[string]string {
 	return map[string]string{
