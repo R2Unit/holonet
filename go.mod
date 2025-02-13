@@ -1,4 +1,4 @@
-module github.com/quanza/talos-core
+module github.com/r2unit/talos-core
 
 go 1.23.4
 

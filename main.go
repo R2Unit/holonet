@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/quanza/talos-core/auth"
-	"github.com/quanza/talos-core/config"
-	"github.com/quanza/talos-core/database"
 	"github.com/r2unit/colours"
+	"github.com/r2unit/talos-core/auth"
+	"github.com/r2unit/talos-core/config"
+	"github.com/r2unit/talos-core/database"
 )
 
 func main() {

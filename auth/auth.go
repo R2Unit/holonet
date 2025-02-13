@@ -9,8 +9,8 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/quanza/talos-core/config"
 	"github.com/r2unit/colours"
+	"github.com/r2unit/talos-core/config"
 
 	_ "github.com/lib/pq"
 )
