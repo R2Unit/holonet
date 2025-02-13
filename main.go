@@ -2,10 +2,13 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/r2unit/colours"
+	"github.com/r2unit/talos-core/api"
 	"github.com/r2unit/talos-core/auth"
 	"github.com/r2unit/talos-core/config"
+	"github.com/r2unit/talos-core/controller"
 	"github.com/r2unit/talos-core/database"
 )
 
@@ -30,5 +33,13 @@ func main() {
 	}
 	defer db.Close()
 
-	// Initialize Database
+	// Register HTTP Handlers for API and WebSocket endpoints
+	http.HandleFunc("/api/task", api.TaskHandler)
+	http.HandleFunc("/ws", controller.WSHandler)
+
+	// Start the HTTP server on port 8080
+	log.Println("Core server starting on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal("ListenAndServe:", err)
+	}
 }
