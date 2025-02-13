@@ -1,1 +1,1 @@
-# talos-core
+# Talos Core
