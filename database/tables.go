@@ -8,6 +8,6 @@ func GetTables() map[string]string {
 		"users":   tables.UsersTable,
 		"groups":  tables.GroupsTables,
 		//	"custmomers": tables.CustomersTable,
-		"wofkflow": tables.WorkflowsTable,
+		//  "wofkflow": tables.WorkflowsTable,
 	}
 }

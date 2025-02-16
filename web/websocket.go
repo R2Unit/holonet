@@ -38,7 +38,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request, validToken string) (net.Con
 
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
-		return nil, errors.New("server does not support hijacking")
+		return nil, errors.New("Talos does not support hijacking")
 	}
 	conn, bufrw, err := hijacker.Hijack()
 	if err != nil {
