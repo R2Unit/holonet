@@ -33,9 +33,13 @@ func main() {
 	}
 	defer db.Close()
 
+	controller.SetDB(db)
+
 	// Register HTTP Handlers for API and WebSocket endpoints
 	http.HandleFunc("/api/task", api.TaskHandler)
 	http.HandleFunc("/ws", controller.WSHandler)
+	http.HandleFunc("/workers", api.WorkersHandler)
+	http.HandleFunc("/queue", api.QueueHandler)
 
 	// Start the HTTP server on port 8080
 	log.Println("Core server starting on :8080")
