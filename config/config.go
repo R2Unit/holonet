@@ -9,6 +9,7 @@ type Config struct {
 	Settings Settings
 	Postgres Postgres
 	S3       S3
+	Redis    Redis
 }
 
 // (lorenzok) Check voor de fallback urls
@@ -40,9 +41,12 @@ func LoadConfig() Config {
 	// Initializing S3 Environments
 	s3Config := NewS3FromEnv()
 
+	redisConfig := EnvToRedis()
+
 	return Config{
 		Settings: settingsConfig,
 		Postgres: postgresConfig,
 		S3:       s3Config,
+		Redis:    redisConfig,
 	}
 }

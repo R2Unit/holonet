@@ -1,0 +1,43 @@
+---
+- hosts: {{HOSTS}}
+  gather_facts: no
+  tasks:
+    - name: Display a message on the target hosts
+      debug:
+        msg: "Running playbook on hosts: {{HOSTS}}"
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: 
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: "Running playbook on hosts: {{HOSTS}}"
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: 
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: "Running playbook on hosts: {{HOSTS}}"
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: 
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: "Running playbook on hosts: {{HOSTS}}"
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: 
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: "Running playbook on hosts: {{HOSTS}}"
+
+    - name: Display a message on the target hosts
+      debug:
+        msg: 

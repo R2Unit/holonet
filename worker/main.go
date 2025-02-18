@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,30 +20,96 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
+	"time"
 )
 
 const (
-	token      = "secret123" // must match the core's validToken.
-	workerName = "worker1"   // Unique worker name.
+	token      = "secret123"              // Must match the core's validToken.
+	workerName = "worker1"                // Unique worker name.
+	wsURL      = "ws://localhost:8080/ws" // Core's WebSocket URL.
 )
 
-// dialWebSocket connects to the WebSocket server and performs the handshake.
+var (
+	debug               bool
+	currentTaskID       string = "none" // holds the current task ID; "none" when idle
+	currentTaskTemplate string = ""     // holds the task_template of current task
+	currentTaskHosts    string = ""     // holds the hosts of current task
+	isRunning           bool
+	taskMutex           sync.Mutex
+	writeMutex          sync.Mutex
+)
+
+func init() {
+	flag.BoolVar(&debug, "debug", false, "enable debug mode")
+	flag.Parse()
+	if os.Getenv("DEBUG") == "true" {
+		debug = true
+	}
+	if debug {
+		log.Println("Debug mode enabled")
+	}
+}
+
+// Task represents a unit of work to be executed.
+type Task struct {
+	ID           string            `json:"id"`
+	Command      string            `json:"command"`
+	Args         []string          `json:"args"`
+	Files        map[string]string `json:"files,omitempty"`
+	Reporter     string            `json:"reporter"`      // provided via API task creation
+	Hosts        string            `json:"hosts"`         // provided via API task creation
+	TaskTemplate string            `json:"task_template"` // e.g. "ansible"
+}
+
+// WorkerStatus is sent from the worker to the core.
+type WorkerStatus struct {
+	Worker       string `json:"worker"`
+	TaskID       string `json:"task_id,omitempty"`
+	Status       string `json:"status"`                  // "running" or "idle"
+	Hosts        string `json:"hosts,omitempty"`         // included when running
+	TaskTemplate string `json:"task_template,omitempty"` // included when running
+	Reporter     string `json:"reporter,omitempty"`      // included when running (set to "automation")
+}
+
+// safeWriteMessage locks and writes a message.
+func safeWriteMessage(conn net.Conn, message string) error {
+	writeMutex.Lock()
+	defer writeMutex.Unlock()
+	return writeMessage(conn, message)
+}
+
+// sendStatus marshals and sends a status update.
+func sendStatus(conn net.Conn, status WorkerStatus) error {
+	data, err := json.Marshal(status)
+	if err != nil {
+		log.Println("Error marshaling status:", err)
+		return err
+	}
+	if debug {
+		log.Printf("[DEBUG] Sending status: %s", string(data))
+	}
+	return safeWriteMessage(conn, string(data))
+}
+
+// dialWebSocket performs the websocket handshake.
 func dialWebSocket(urlStr string) (net.Conn, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, err
 	}
-	// Append token and worker name as query parameters.
 	q := u.Query()
 	q.Set("token", token)
 	q.Set("name", workerName)
 	u.RawQuery = q.Encode()
 
+	if debug {
+		log.Printf("[DEBUG] Attempting connection to %s", u.String())
+	}
 	conn, err := net.Dial("tcp", u.Host)
 	if err != nil {
 		return nil, err
 	}
-	// Generate a random Sec-WebSocket-Key.
 	keyBytes := make([]byte, 16)
 	if _, err := rand.Read(keyBytes); err != nil {
 		conn.Close()
@@ -55,11 +122,13 @@ func dialWebSocket(urlStr string) (net.Conn, error) {
 		"Connection: Upgrade\r\n" +
 		"Sec-WebSocket-Key: " + key + "\r\n" +
 		"Sec-WebSocket-Version: 13\r\n\r\n"
+	if debug {
+		log.Printf("[DEBUG] Sending handshake request:\n%s", req)
+	}
 	if _, err := conn.Write([]byte(req)); err != nil {
 		conn.Close()
 		return nil, err
 	}
-	// Read the server's handshake response.
 	reader := bufio.NewReader(conn)
 	resp, err := http.ReadResponse(reader, &http.Request{Method: "GET"})
 	if err != nil {
@@ -70,10 +139,13 @@ func dialWebSocket(urlStr string) (net.Conn, error) {
 		conn.Close()
 		return nil, errors.New("failed to upgrade to websocket")
 	}
+	if debug {
+		log.Printf("[DEBUG] Connection upgraded, response: %s", resp.Status)
+	}
 	return conn, nil
 }
 
-// readMessage reads a single unfragmented text message from the WebSocket connection.
+// readMessage reads a single websocket text message.
 func readMessage(conn net.Conn) (string, error) {
 	var header [2]byte
 	if _, err := io.ReadFull(conn, header[:2]); err != nil {
@@ -114,14 +186,20 @@ func readMessage(conn net.Conn) (string, error) {
 			payload[i] ^= maskingKey[i%4]
 		}
 	}
+	if debug {
+		log.Printf("[DEBUG] Received message: %s", string(payload))
+	}
 	return string(payload), nil
 }
 
-// writeMessage writes a single unfragmented text message to the WebSocket connection.
+// writeMessage writes a websocket text message.
 func writeMessage(conn net.Conn, message string) error {
+	if debug {
+		log.Printf("[DEBUG] Sending message: %s", message)
+	}
 	payload := []byte(message)
 	var header bytes.Buffer
-	header.WriteByte(0x81) // FIN + text frame opcode
+	header.WriteByte(0x81) // FIN + text opcode
 	length := len(payload)
 	if length < 126 {
 		header.WriteByte(byte(length))
@@ -143,46 +221,130 @@ func writeMessage(conn net.Conn, message string) error {
 	return err
 }
 
-// Task mirrors the structure in the core queue.
-type Task struct {
-	ID      string            `json:"id"`
-	Command string            `json:"command"`
-	Args    []string          `json:"args"`
-	Files   map[string]string `json:"files,omitempty"`
+// heartbeat sends status updates every second.
+func heartbeat(conn net.Conn, done chan struct{}) {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			taskMutex.Lock()
+			tID := currentTaskID
+			running := isRunning
+			tTemplate := currentTaskTemplate
+			tHosts := currentTaskHosts
+			taskMutex.Unlock()
+			var ws WorkerStatus
+			if running {
+				ws = WorkerStatus{
+					Worker:       workerName,
+					TaskID:       tID,
+					Status:       "running",
+					Hosts:        tHosts,
+					Reporter:     "automation",
+					TaskTemplate: tTemplate,
+				}
+			} else {
+				ws = WorkerStatus{
+					Worker: workerName,
+					TaskID: tID,
+					Status: "idle",
+				}
+			}
+			if err := sendStatus(conn, ws); err != nil {
+				log.Println("[Heartbeat] Error sending status, exiting heartbeat")
+				return
+			}
+		}
+	}
 }
 
-// executeTask writes provided files to a temporary directory (if any),
-// sends a "started" status message, executes the task, and then sends a "done" update.
+// executeTask writes any files, runs galaxy installation if a requirements.yml exists,
+// then runs the main command (ansible-playbook), and sends status updates.
 func executeTask(task Task, conn net.Conn) {
-	// If there are files, write them to a temporary directory.
+	if debug {
+		log.Printf("[DEBUG] Starting execution of task: %+v", task)
+	}
+	var tempDir string
 	if len(task.Files) > 0 {
-		tempDir, err := ioutil.TempDir("", "task-"+task.ID)
+		var err error
+		tempDir, err = ioutil.TempDir("", "task-"+task.ID)
 		if err != nil {
 			log.Printf("Task %s: failed to create temporary directory: %v", task.ID, err)
 			return
 		}
-		defer os.RemoveAll(tempDir) // Clean up after execution.
-
-		// Write each file and update arguments if needed.
+		if debug {
+			log.Printf("[DEBUG] Temporary directory created: %s", tempDir)
+		}
+		defer os.RemoveAll(tempDir)
 		for filename, content := range task.Files {
 			filePath := filepath.Join(tempDir, filename)
 			if err := ioutil.WriteFile(filePath, []byte(content), 0644); err != nil {
 				log.Printf("Task %s: failed to write file %s: %v", task.ID, filename, err)
 				return
 			}
-			// Replace file references in Args with the full path.
+			if debug {
+				log.Printf("[DEBUG] Wrote file %s (length %d)", filePath, len(content))
+			}
 			for i, arg := range task.Args {
 				if arg == filename {
+					if debug {
+						log.Printf("[DEBUG] Replacing argument %s with %s", arg, filePath)
+					}
 					task.Args[i] = filePath
 				}
 			}
 		}
 	}
 
-	// Send a status update: task started.
-	startMsg := fmt.Sprintf("Task %s started on worker '%s'", task.ID, workerName)
-	if err := writeMessage(conn, startMsg); err != nil {
-		log.Println("Error sending start status:", err)
+	// Update global task info.
+	taskMutex.Lock()
+	currentTaskID = task.ID
+	currentTaskTemplate = task.TaskTemplate
+	currentTaskHosts = task.Hosts
+	isRunning = true
+	taskMutex.Unlock()
+
+	// Before running the playbook, check for requirements.yml and run galaxy install.
+	if _, ok := task.Files["requirements.yml"]; ok && tempDir != "" {
+		reqPath := filepath.Join(tempDir, "requirements.yml")
+		if debug {
+			log.Printf("[DEBUG] Found requirements.yml at %s, running ansible-galaxy install", reqPath)
+		}
+		cmdGalaxy := exec.Command("ansible-galaxy", "install", "-r", reqPath, "--force")
+		galaxyOutput, galaxyErr := cmdGalaxy.CombinedOutput()
+		if galaxyErr != nil {
+			log.Printf("Task %s: ansible-galaxy install failed: %v\nOutput: %s", task.ID, galaxyErr, string(galaxyOutput))
+			taskMutex.Lock()
+			isRunning = false
+			currentTaskID = "none"
+			currentTaskTemplate = ""
+			currentTaskHosts = ""
+			taskMutex.Unlock()
+			sendStatus(conn, WorkerStatus{
+				Worker: workerName,
+				TaskID: "none",
+				Status: "idle",
+			})
+			return
+		}
+		if debug {
+			log.Printf("[DEBUG] ansible-galaxy install output: %s", string(galaxyOutput))
+		}
+	}
+
+	// Send running status update with extra fields.
+	if err := sendStatus(conn, WorkerStatus{
+		Worker:       workerName,
+		TaskID:       task.ID,
+		Status:       "running",
+		Hosts:        task.Hosts,
+		Reporter:     "automation",
+		TaskTemplate: task.TaskTemplate,
+	}); err != nil {
+		log.Println("Error sending running status:", err)
 	}
 
 	log.Printf("Executing task %s: %s %v", task.ID, task.Command, task.Args)
@@ -190,44 +352,64 @@ func executeTask(task Task, conn net.Conn) {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Task %s failed: %v\nOutput: %s", task.ID, err, string(output))
-		// Optionally, send a failure status update.
-		failMsg := fmt.Sprintf("Task %s failed on worker '%s'", task.ID, workerName)
-		_ = writeMessage(conn, failMsg)
+		taskMutex.Lock()
+		isRunning = false
+		currentTaskID = "none"
+		currentTaskTemplate = ""
+		currentTaskHosts = ""
+		taskMutex.Unlock()
+		sendStatus(conn, WorkerStatus{
+			Worker: workerName,
+			TaskID: "none",
+			Status: "idle",
+		})
 		return
 	}
-
 	log.Printf("Task %s completed successfully:\n%s", task.ID, string(output))
-	// Send a completion status update.
-	doneMsg := fmt.Sprintf("Task %s completed on worker '%s'", task.ID, workerName)
-	if err := writeMessage(conn, doneMsg); err != nil {
-		log.Println("Error sending completion status:", err)
+	taskMutex.Lock()
+	isRunning = false
+	currentTaskID = "none"
+	currentTaskTemplate = ""
+	currentTaskHosts = ""
+	taskMutex.Unlock()
+	if err := sendStatus(conn, WorkerStatus{
+		Worker: workerName,
+		TaskID: "none",
+		Status: "idle",
+	}); err != nil {
+		log.Println("Error sending idle status after completion:", err)
 	}
 }
 
 func main() {
-	wsURL := "ws://localhost:8080/ws"
-	conn, err := dialWebSocket(wsURL)
-	if err != nil {
-		log.Fatal("Error connecting to core:", err)
-	}
-	defer conn.Close()
-
-	log.Println("Worker connected to core via WebSocket")
-
-	// Listen for tasks from the core.
 	for {
-		msg, err := readMessage(conn)
+		conn, err := dialWebSocket(wsURL)
 		if err != nil {
-			log.Println("Error reading message (connection lost):", err)
-			break // Exit the loop if the connection is lost.
-		}
-		var task Task
-		if err := json.Unmarshal([]byte(msg), &task); err != nil {
-			log.Println("Error unmarshalling task:", err)
+			log.Println("Error connecting to core:", err)
+			time.Sleep(5 * time.Second)
 			continue
 		}
-		// Execute the task concurrently, passing the connection for status updates.
-		go executeTask(task, conn)
+		log.Println("Worker connected to core via WebSocket")
+
+		heartbeatDone := make(chan struct{})
+		go heartbeat(conn, heartbeatDone)
+
+		for {
+			msg, err := readMessage(conn)
+			if err != nil {
+				log.Println("Error reading message (connection lost):", err)
+				break
+			}
+			var task Task
+			if err := json.Unmarshal([]byte(msg), &task); err != nil {
+				log.Println("Error unmarshalling task:", err)
+				continue
+			}
+			go executeTask(task, conn)
+		}
+		close(heartbeatDone)
+		conn.Close()
+		log.Println("Worker: Disconnected from core, retrying in 5 seconds")
+		time.Sleep(5 * time.Second)
 	}
-	log.Println("Worker: Disconnected from core")
 }
