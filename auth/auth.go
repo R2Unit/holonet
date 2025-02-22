@@ -9,7 +9,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/r2unit/colours"
+	"github.com/r2unit/go-colours"
 	"github.com/r2unit/holonet-core/config"
 
 	_ "github.com/lib/pq"
@@ -40,7 +40,7 @@ func InitDB() (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Println(colours.Danger("Error opening database:"), err)
+		log.Println(colours.Error("Error opening database:"), err)
 		return nil, err
 	}
 
