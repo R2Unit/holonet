@@ -1,4 +1,4 @@
-module github.com/r2unit/talos-core
+module github.com/r2unit/holonet-core
 
 go 1.23.4
 
