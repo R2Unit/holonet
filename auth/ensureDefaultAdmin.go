@@ -7,7 +7,6 @@ import (
 	"github.com/r2unit/colours"
 )
 
-// ensureDefaultAdmin checks if an admin user exists; if not, it creates one with a random password.
 func ensureDefaultAdmin(db *sql.DB) {
 	var exists bool
 	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE username = 'admin')").Scan(&exists)
@@ -31,7 +30,6 @@ func ensureDefaultAdmin(db *sql.DB) {
 
 		hashedPassword := hashPassword(password, salt)
 
-		// The following line was fixed to include all four columns (username, password, salt, user_group)
 		_, err = db.Exec(
 			"INSERT INTO users (username, password, salt, user_group) VALUES ($1, $2, $3, $4)",
 			"admin",

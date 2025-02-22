@@ -34,13 +34,9 @@ func getEnvAsInt(key string, fallback int) int {
 // (lorenzo) Inladen van Configuratie naar cache en om te gebruiken voor componenten
 // TODO: Robusteren handling maken voor failed states of errors...
 func LoadConfig() Config {
-	// Initializing Settings Environments
 	settingsConfig := EnvToSettings()
-	// Initializing Postgres Environments
 	postgresConfig := PostgresFromEnv()
-	// Initializing S3 Environments
 	s3Config := NewS3FromEnv()
-
 	redisConfig := EnvToRedis()
 
 	return Config{

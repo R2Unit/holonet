@@ -2,7 +2,6 @@ package auth
 
 import "log"
 
-// RegisterUser creates a new user with a hashed password and salt.
 func (a *AuthService) RegisterUser(username, password, user_group string) error {
 	salt, err := generateSalt()
 	if err != nil {

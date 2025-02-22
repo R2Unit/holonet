@@ -14,6 +14,7 @@ func RegisterTask(taskType string, creator TaskCreator) {
 	registry[taskType] = creator
 }
 
+// TODO: Een betere task management voor als er undefined issues zijn.
 func GetTaskCreator(taskType string) (TaskCreator, error) {
 	creator, exists := registry[taskType]
 	if !exists {

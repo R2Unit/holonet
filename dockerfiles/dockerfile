@@ -1,0 +1,2 @@
+FROM go01.23.6 as BUILDER
+

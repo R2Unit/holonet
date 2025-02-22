@@ -5,7 +5,6 @@ import (
 	"errors"
 )
 
-// AuthenticateUser checks if the given username and password match a user in the database.
 func (a *AuthService) AuthenticateUser(username, password string) (*User, error) {
 	var user User
 	err := a.DB.QueryRow("SELECT id, username, password, salt FROM users WHERE username = $1", username).

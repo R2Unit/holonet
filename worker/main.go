@@ -25,21 +25,26 @@ import (
 )
 
 const (
-	token      = "secret123"              // Must match the core's validToken.
-	workerName = "worker1"                // Unique worker name.
-	wsURL      = "ws://localhost:8080/ws" // Core's WebSocket URL.
+	token      = "secret123"
+	workerName = "worker1"
+	wsURL      = "ws://localhost:8080/ws"
 )
 
 var (
 	debug               bool
-	currentTaskID       string = "none" // holds the current task ID; "none" when idle
-	currentTaskTemplate string = ""     // holds the task_template of current task
-	currentTaskHosts    string = ""     // holds the hosts of current task
+	currentTaskID       string = "none"
+	currentTaskTemplate string = ""
+	currentTaskHosts    string = ""
 	isRunning           bool
 	taskMutex           sync.Mutex
 	writeMutex          sync.Mutex
 )
 
+// DEBUG Mode voor de Worker, voor het troubleshooten van tasks,
+// Zouden ze wel in testing werken maar niet op ee worker
+//
+// Je kan de sourcecode runnen met "go run main.go -debug"
+// Of een ENV adden met DEBUG=true
 func init() {
 	flag.BoolVar(&debug, "debug", false, "enable debug mode")
 	flag.Parse()
@@ -51,35 +56,32 @@ func init() {
 	}
 }
 
-// Task represents a unit of work to be executed.
 type Task struct {
 	ID           string            `json:"id"`
 	Command      string            `json:"command"`
 	Args         []string          `json:"args"`
 	Files        map[string]string `json:"files,omitempty"`
-	Reporter     string            `json:"reporter"`      // provided via API task creation
-	Hosts        string            `json:"hosts"`         // provided via API task creation
-	TaskTemplate string            `json:"task_template"` // e.g. "ansible"
+	Reporter     string            `json:"reporter"`
+	Hosts        string            `json:"hosts"`
+	TaskTemplate string            `json:"task_template"`
 }
 
-// WorkerStatus is sent from the worker to the core.
+// Status van Worker in JSON layout naar Core
 type WorkerStatus struct {
 	Worker       string `json:"worker"`
 	TaskID       string `json:"task_id,omitempty"`
-	Status       string `json:"status"`                  // "running" or "idle"
-	Hosts        string `json:"hosts,omitempty"`         // included when running
-	TaskTemplate string `json:"task_template,omitempty"` // included when running
-	Reporter     string `json:"reporter,omitempty"`      // included when running (set to "automation")
+	Status       string `json:"status"`
+	Hosts        string `json:"hosts,omitempty"`
+	TaskTemplate string `json:"task_template,omitempty"`
+	Reporter     string `json:"reporter,omitempty"`
 }
 
-// safeWriteMessage locks and writes a message.
 func safeWriteMessage(conn net.Conn, message string) error {
 	writeMutex.Lock()
 	defer writeMutex.Unlock()
 	return writeMessage(conn, message)
 }
 
-// sendStatus marshals and sends a status update.
 func sendStatus(conn net.Conn, status WorkerStatus) error {
 	data, err := json.Marshal(status)
 	if err != nil {
@@ -92,7 +94,8 @@ func sendStatus(conn net.Conn, status WorkerStatus) error {
 	return safeWriteMessage(conn, string(data))
 }
 
-// dialWebSocket performs the websocket handshake.
+// Afhandelen van de dial naar Core, authenticatie en die onzin
+// TODO: Maybe authenticatie laten verlopen via een machine-id in Keycloak i.p.v. een token?
 func dialWebSocket(urlStr string) (net.Conn, error) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
@@ -145,7 +148,6 @@ func dialWebSocket(urlStr string) (net.Conn, error) {
 	return conn, nil
 }
 
-// readMessage reads a single websocket text message.
 func readMessage(conn net.Conn) (string, error) {
 	var header [2]byte
 	if _, err := io.ReadFull(conn, header[:2]); err != nil {
@@ -192,14 +194,14 @@ func readMessage(conn net.Conn) (string, error) {
 	return string(payload), nil
 }
 
-// writeMessage writes a websocket text message.
 func writeMessage(conn net.Conn, message string) error {
 	if debug {
 		log.Printf("[DEBUG] Sending message: %s", message)
 	}
+	// FIN + tekst opmaak naar Bytes
 	payload := []byte(message)
 	var header bytes.Buffer
-	header.WriteByte(0x81) // FIN + text opcode
+	header.WriteByte(0x81)
 	length := len(payload)
 	if length < 126 {
 		header.WriteByte(byte(length))
@@ -221,7 +223,8 @@ func writeMessage(conn net.Conn, message string) error {
 	return err
 }
 
-// heartbeat sends status updates every second.
+// Hearthbeat naar de Core for de worker.
+// TODO: Een betere connectiviteit maken naar de core dit is tijdelijk en werkend.
 func heartbeat(conn net.Conn, done chan struct{}) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -261,8 +264,6 @@ func heartbeat(conn net.Conn, done chan struct{}) {
 	}
 }
 
-// executeTask writes any files, runs galaxy installation if a requirements.yml exists,
-// then runs the main command (ansible-playbook), and sends status updates.
 func executeTask(task Task, conn net.Conn) {
 	if debug {
 		log.Printf("[DEBUG] Starting execution of task: %+v", task)
@@ -299,7 +300,6 @@ func executeTask(task Task, conn net.Conn) {
 		}
 	}
 
-	// Update global task info.
 	taskMutex.Lock()
 	currentTaskID = task.ID
 	currentTaskTemplate = task.TaskTemplate
@@ -307,7 +307,8 @@ func executeTask(task Task, conn net.Conn) {
 	isRunning = true
 	taskMutex.Unlock()
 
-	// Before running the playbook, check for requirements.yml and run galaxy install.
+	// Voor het runnen van de Task (zou het een playbook zijn)
+	// Installeren van de requirements temporary.
 	if _, ok := task.Files["requirements.yml"]; ok && tempDir != "" {
 		reqPath := filepath.Join(tempDir, "requirements.yml")
 		if debug {
@@ -335,7 +336,6 @@ func executeTask(task Task, conn net.Conn) {
 		}
 	}
 
-	// Send running status update with extra fields.
 	if err := sendStatus(conn, WorkerStatus{
 		Worker:       workerName,
 		TaskID:       task.ID,

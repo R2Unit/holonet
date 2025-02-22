@@ -2,7 +2,6 @@ package auth
 
 import "log"
 
-// UpdateUserPassword updates the user's password by generating a new salt and hashing the new password.
 func (a *AuthService) UpdateUserPassword(username, newPassword string) error {
 	salt, err := generateSalt()
 	if err != nil {

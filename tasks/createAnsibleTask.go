@@ -1,10 +1,10 @@
-// core/tasks/createAnsibleTask.go
 package tasks
 
 import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+
 	"path/filepath"
 	"strings"
 	"time"
@@ -30,29 +30,24 @@ func createAnsibleTask(params map[string]string) (queue.Task, error) {
 		return queue.Task{}, errors.New("missing 'reporter' parameter")
 	}
 
-	// Hardcoded filenames in the template directory.
 	templateDir := "template"
 	inventoryFile := "inventory.ini"
 	playbookFile := "site.yml"
 	reqFile := "requirements.yml"
 
-	// Read the inventory file.
 	invPath := filepath.Join(templateDir, inventoryFile)
 	invContent, err := ioutil.ReadFile(invPath)
 	if err != nil {
 		return queue.Task{}, fmt.Errorf("failed to read inventory file: %w", err)
 	}
 
-	// Read the playbook file.
 	playbookPath := filepath.Join(templateDir, playbookFile)
 	playbookBytes, err := ioutil.ReadFile(playbookPath)
 	if err != nil {
 		return queue.Task{}, fmt.Errorf("failed to read playbook file: %w", err)
 	}
-	// Replace the placeholder {{HOSTS}} in the playbook.
 	playbookContent := strings.Replace(string(playbookBytes), "{{HOSTS}}", hosts, -1)
 
-	// Read the requirements file if it exists.
 	var reqContent string
 	reqPath := filepath.Join(templateDir, reqFile)
 	if data, err := ioutil.ReadFile(reqPath); err == nil {
@@ -61,7 +56,7 @@ func createAnsibleTask(params map[string]string) (queue.Task, error) {
 		reqContent = ""
 	}
 
-	// Create the task.
+	// Aanmaken van de task voor een Worker met alle aligned informatie
 	task := queue.Task{
 		ID:      fmt.Sprintf("ansible-%d", time.Now().UnixNano()),
 		Command: "ansible-playbook",
@@ -75,7 +70,7 @@ func createAnsibleTask(params map[string]string) (queue.Task, error) {
 		TaskTemplate: "ansible",
 	}
 
-	// If requirements.yml was found, attach it.
+	// Controle voor de requirements van deze task
 	if reqContent != "" {
 		task.Files[reqFile] = reqContent
 	}
