@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/r2unit/talos-core/controller"
-	"github.com/r2unit/talos-core/queue"
+	"github.com/r2unit/holonet-core/controller"
+	"github.com/r2unit/holonet-core/queue"
 )
 
 func WorkersHandler(w http.ResponseWriter, r *http.Request) {

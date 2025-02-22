@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/r2unit/talos-core/queue"
-	"github.com/r2unit/talos-core/tasks"
+	"github.com/r2unit/holonet-core/queue"
+	"github.com/r2unit/holonet-core/tasks"
 )
 
 type TaskRequest struct {

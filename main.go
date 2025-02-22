@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/r2unit/colours"
-	"github.com/r2unit/talos-core/api"
-	"github.com/r2unit/talos-core/auth"
-	"github.com/r2unit/talos-core/config"
-	"github.com/r2unit/talos-core/controller"
-	"github.com/r2unit/talos-core/database"
+	"github.com/r2unit/holonet-core/api"
+	"github.com/r2unit/holonet-core/auth"
+	"github.com/r2unit/holonet-core/config"
+	"github.com/r2unit/holonet-core/controller"
+	"github.com/r2unit/holonet-core/database"
 )
 
 func main() {

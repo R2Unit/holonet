@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/r2unit/colours"
-	"github.com/r2unit/talos-core/config"
+	"github.com/r2unit/holonet-core/config"
 
 	_ "github.com/lib/pq"
 )

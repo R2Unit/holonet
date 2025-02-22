@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/r2unit/talos-core/queue"
-	"github.com/r2unit/talos-core/web"
+	"github.com/r2unit/holonet-core/queue"
+	"github.com/r2unit/holonet-core/web"
 )
 
 const validToken = "secret123"
