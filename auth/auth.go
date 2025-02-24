@@ -45,7 +45,7 @@ func InitDB() (*sql.DB, error) {
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Println("Error connecting to database:", err)
+		log.Println(colours.Error("Error connecting to database:"), err)
 		return nil, err
 	}
 
