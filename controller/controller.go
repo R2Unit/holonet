@@ -1,4 +1,3 @@
-// core/controller/controller.go
 package controller
 
 import (
@@ -13,7 +12,7 @@ import (
 	"github.com/r2unit/holonet-core/web"
 )
 
-const validToken = "secret123"
+const validToken = "insecure"
 
 type WorkerInfo struct {
 	Name        string `json:"name"`
