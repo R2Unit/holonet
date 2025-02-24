@@ -1,0 +1,10 @@
+.env
+/env
+/env/
+/env/.emv
+/env/netbox.env
+/env/postgres.env
+/env/redis-cache.env
+/env/redis.env
+.docker/env/
+
