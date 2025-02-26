@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/r2unit/colours"
 	"github.com/r2unit/holonet-core/queue"
 	"github.com/r2unit/holonet-core/web"
 )
@@ -109,7 +110,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 	RegisterWorker(workerName)
 	SetWorkerHealth(workerName, "connected")
-	log.Printf("Worker '%s' connected", workerName)
+	log.Printf(colours.Info("Worker '%s' connected"), workerName)
 
 	defer func() {
 		conn.Close()
@@ -122,7 +123,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		for {
 			msg, err := web.ReadMessage(conn)
 			if err != nil {
-				log.Printf("Worker '%s' disconnected", workerName)
+				log.Printf(colours.Info("Worker '%s' disconnected"), workerName)
 				SetWorkerHealth(workerName, "error")
 				InsertWorkerLog(workerName, "", "disconnected", "", "", "")
 				return
@@ -132,7 +133,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Non-JSON status from worker '%s': %s", workerName, msg)
 			} else {
 				if !(status.Status == "idle" && (status.TaskID == "" || status.TaskID == "none")) {
-					log.Printf("Status update from worker '%s': task: %s, status: %s, hosts: %s, template: %s, reporter: %s",
+					log.Printf(colours.Info("Status update from worker '%s': task: %s, status: %s, hosts: %s, template: %s, reporter: %s"),
 						workerName, status.TaskID, status.Status, status.Hosts, status.TaskTemplate, status.Reporter)
 					InsertWorkerLog(status.Worker, status.TaskID, status.Status, status.Hosts, status.TaskTemplate, status.Reporter)
 				}
@@ -155,7 +156,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("WriteMessage error:", err)
 				return
 			}
-			log.Printf("Sent task %s to worker '%s'", task.ID, workerName)
+			log.Printf(colours.Info("Sent task %s to worker '%s'"), task.ID, workerName)
 			InsertWorkerLog(workerName, task.ID, "sent", task.Hosts, task.TaskTemplate, task.Reporter)
 		default:
 			time.Sleep(1 * time.Second)
