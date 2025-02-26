@@ -11,6 +11,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/r2unit/go-colours"
 )
 
 func ComputeAcceptKey(key string) string {
@@ -25,9 +27,9 @@ func Upgrade(w http.ResponseWriter, r *http.Request, validToken string) (net.Con
 	name := r.URL.Query().Get("name")
 	if token != validToken || name == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return nil, errors.New("invalid token or missing worker name")
+		return nil, errors.New(colours.Error("invalid token or missing worker name"))
 	}
-	log.Printf("Worker '%s' attempting to connect", name)
+	log.Printf(colours.Info("Worker '%s' attempting to connect"), name)
 
 	key := r.Header.Get("Sec-WebSocket-Key")
 	if key == "" {
@@ -38,7 +40,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request, validToken string) (net.Con
 
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
-		return nil, errors.New("Talos does not support hijacking")
+		return nil, errors.New(colours.Error("Holonet does not support hijacking"))
 	}
 	conn, bufrw, err := hijacker.Hijack()
 	if err != nil {
@@ -57,7 +59,7 @@ func Upgrade(w http.ResponseWriter, r *http.Request, validToken string) (net.Con
 		conn.Close()
 		return nil, err
 	}
-	log.Printf("Worker '%s' connected successfully", name)
+	log.Printf(colours.Info("Worker '%s' connected successfully"), name)
 	return conn, nil
 }
 
@@ -69,7 +71,7 @@ func ReadMessage(conn net.Conn) (string, error) {
 	fin := header[0] & 0x80
 	opcode := header[0] & 0x0F
 	if fin == 0 || opcode != 1 {
-		return "", errors.New("only single-frame text messages supported")
+		return "", errors.New(colours.Error("only single-frame text messages supported"))
 	}
 	masked := header[1] & 0x80
 	payloadLen := int(header[1] & 0x7F)
