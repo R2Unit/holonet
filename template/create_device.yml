@@ -1,0 +1,63 @@
+---
+- name: Task - create_device
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    netbox_url: "https://netbox.quanza.net"
+    netbox_token: "b3fd615dda56eb71ce54d85fb4eb4ce001c3e59f"
+
+    device_data:
+      name: "test-lorenzok"
+      description: "This device is an Example of Network Automaton"
+      serial: "EXAMPLE_SERIAL"
+      asset_tag: "EXAMPLE_ASSET-TAG"
+      airflow: "enabled"
+      platform: "JunOS"
+      device_type: "example"
+      device_role: "example"        
+      site: "QHQ LAB"
+      status: "inventory"
+
+    interface_data:
+      name: "GigabitEthernet0/0"
+      type: "1000base-t"     
+      enabled: true
+      description: "Uplink interface"
+      label: "Management Port"
+      mgmt_only: true     
+      mark_connected: true  
+
+  tasks:
+
+    - name: Create node in Netbox
+      netbox.netbox.netbox_device:
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        data:
+          name: "{{ device_data.name }}"
+          description: "{{ device_data.description }}"
+          serial: "{{ device_data.serial }}"
+          asset_tag: "{{ device_data.asset_tag }}"
+          platform: "{{ device_data.platform }}"
+          device_type: "{{ device_data.device_type }}"
+          device_role: "{{ device_data.device_role }}"
+          site: "{{ device_data.site }}"
+          status: "{{ device_data.status }}"
+        state: present   
+
+    - name: Add interface to Device
+      netbox.netbox.netbox_device_interface:
+        netbox_url: "{{ netbox_url }}"
+        netbox_token: "{{ netbox_token }}"
+        data:
+          name: "{{ interface_data.name }}"
+          device: "{{ device_data.name }}"
+          type: "{{ interface_data.type }}"
+          enabled: "{{ interface_data.enabled }}"
+          description: "{{ interface_data.description }}"
+          mgmt_only: "{{ interface_data.mgmt_only }}"
+          mark_connected: "{{ interface_data.mark_connected }}"
+          label: "{{ interface_data.label }}"
+        state: present
