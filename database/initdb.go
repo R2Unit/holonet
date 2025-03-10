@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/r2unit/colours"
-	"github.com/r2unit/holonet-core/config"
+	"github.com/r2unit/holonet/config"
 
 	_ "github.com/lib/pq"
 )

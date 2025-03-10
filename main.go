@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/r2unit/holonet-core/api"
-	"github.com/r2unit/holonet-core/auth"
-	"github.com/r2unit/holonet-core/config"
-	"github.com/r2unit/holonet-core/controller"
-	"github.com/r2unit/holonet-core/database"
+	"github.com/r2unit/holonet/api"
+	"github.com/r2unit/holonet/auth"
+	"github.com/r2unit/holonet/config"
+	"github.com/r2unit/holonet/controller"
+	"github.com/r2unit/holonet/database"
 
 	"github.com/r2unit/go-colours"
 )

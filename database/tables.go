@@ -1,6 +1,6 @@
 package database
 
-import "github.com/r2unit/holonet-core/database/tables"
+import "github.com/r2unit/holonet/database/tables"
 
 func GetTables() map[string]string {
 	return map[string]string{

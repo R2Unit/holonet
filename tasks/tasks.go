@@ -3,7 +3,7 @@ package tasks
 import (
 	"errors"
 
-	"github.com/r2unit/holonet-core/queue"
+	"github.com/r2unit/holonet/queue"
 )
 
 type TaskCreator func(params map[string]string) (queue.Task, error)

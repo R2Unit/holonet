@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/r2unit/holonet-core/controller"
-	"github.com/r2unit/holonet-core/queue"
+	"github.com/r2unit/holonet/controller"
+	"github.com/r2unit/holonet/queue"
 )
 
 func WorkersHandler(w http.ResponseWriter, r *http.Request) {

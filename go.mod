@@ -1,4 +1,4 @@
-module github.com/r2unit/holonet-core
+module github.com/r2unit/holonet
 
 go 1.23.4
 

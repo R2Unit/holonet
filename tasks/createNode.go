@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/r2unit/holonet-core/queue"
+	"github.com/r2unit/holonet/queue"
 )
 
 // createAnsibleTask creates a new Task for running an ansible-playbook.

@@ -10,7 +10,7 @@ import (
 	"math/big"
 
 	"github.com/r2unit/go-colours"
-	"github.com/r2unit/holonet-core/config"
+	"github.com/r2unit/holonet/config"
 
 	_ "github.com/lib/pq"
 )

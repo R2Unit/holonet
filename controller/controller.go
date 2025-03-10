@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/r2unit/colours"
-	"github.com/r2unit/holonet-core/queue"
-	"github.com/r2unit/holonet-core/web"
+	"github.com/r2unit/holonet/queue"
+	"github.com/r2unit/holonet/web"
 )
 
 const validToken = "insecure"
