@@ -1,6 +1,6 @@
 package tables
 
-const TemplatesTables = `
+const TemplatesTable = `
 	CREATE TABLE templates (
 		ID SERIAL PRIMARY KEY,
 		name VARCHAR(225) NOT NULL,

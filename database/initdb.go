@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/r2unit/colours"
+	"github.com/r2unit/go-colours"
 	"github.com/r2unit/holonet/config"
 
 	_ "github.com/lib/pq"
@@ -25,12 +25,12 @@ func InitDB() (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf(colours.Danger("Failed to open database connection: %v"), err)
+		log.Fatalf(colours.Error("Failed to open database connection: %v"), err)
 		return nil, err
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Fatalf(colours.Danger("Database connection failed: %v"), err)
+		log.Fatalf(colours.Error("Database connection failed: %v"), err)
 		return nil, err
 	}
 
