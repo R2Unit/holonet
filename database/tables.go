@@ -9,7 +9,8 @@ func GetTables() map[string]string {
 		"groups":  tables.GroupsTables,
 		//	"custmomers": tables.CustomersTable,
 		//  "wofkflow": tables.WorkflowsTable,
-		"templates": tables.TemplatesTable,
-		"workers":   tables.WorkersTable,
+		// "templates": tables.TemplatesTable,
+		"workers": tables.WorkersTable,
+		"tasks":   tables.TasksTable,
 	}
 }

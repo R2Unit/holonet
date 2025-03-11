@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/r2unit/holonet/api"
 	"github.com/r2unit/holonet/auth"
@@ -14,37 +15,43 @@ import (
 )
 
 func main() {
+	// Initialization van Environmonts...
+	// TODO: Kijken om een wait or retry check in te bouwen in de Postgres connectivity. Canceled terug als de database neit up us.
+	log.Println(colours.Success("Loading Environments..."))
+	time.Sleep(3 * time.Second)
 	cfg := config.LoadConfig()
+	time.Sleep(2 * time.Second)
+	log.Printf(colours.Success("Settings Config: %+v"), cfg.Settings)
+	time.Sleep(1 * time.Second)
+	log.Printf(colours.Success("Postgres Config: %+v"), cfg.Postgres)
+	time.Sleep(1 * time.Second)
+	log.Printf(colours.Success("S3 Config: %+v"), cfg.S3)
+	time.Sleep(2 * time.Second)
+	log.Println(colours.Success("Environments loaded =)"))
 
-	// Environment Debug
-	log.Printf(colours.Debug("Settings Config: %+v"), cfg.Settings)
-	log.Printf(colours.Debug("Postgres Config: %+v"), cfg.Postgres)
-	log.Printf(colours.Debug("S3 Config: %+v"), cfg.S3)
-
+	// Initialization of Database
 	database.InitializeDatabase()
 
-	// Database Debug
-	log.Printf(colours.Debug("Connecting to DB: host=%s port=%d user=%s dbname=%s"),
+	log.Printf(colours.Success("Connecting to DB: host=%s port=%d user=%s dbname=%s"),
 		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User, cfg.Postgres.DBName)
 
 	// Initialize Authentication
 	db, err := auth.InitDB()
 	if err != nil {
-		log.Fatal("Failed to initialize authentication:", err)
+		log.Fatal(colours.Error("Failed to initialize authentication:"), err)
 	}
 	defer db.Close()
 
 	controller.SetDB(db)
 
-	// Register HTTP Handlers for API and WebSocket endpoints
+	// http.HandleFunc("/api/ussr"),
 	http.HandleFunc("/api/task", api.TaskHandler)
 	http.HandleFunc("/ws", controller.WSHandler)
 	http.HandleFunc("/workers", api.WorkersHandler)
 	http.HandleFunc("/queue", api.QueueHandler)
 
-	// Start the HTTP server on port 8080
 	log.Println("Core server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":443", nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }

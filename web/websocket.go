@@ -1,4 +1,3 @@
-// core/web/websocket.go
 package web
 
 import (

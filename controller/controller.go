@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/r2unit/colours"
+	"github.com/r2unit/go-colours"
 	"github.com/r2unit/holonet/queue"
 	"github.com/r2unit/holonet/web"
 )

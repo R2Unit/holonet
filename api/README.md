@@ -8,9 +8,10 @@ curl -X POST http://localhost:8080/api/task \
      -d '{
            "type": "ansible",
            "params": {
+             "hosts": "localhost",
+             "reporter": "example@quanza.net",
              "inventory": "my_inventory.ini",
              "playbook": "site.yml"
            }
          }'
-
 ```

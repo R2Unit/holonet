@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/r2unit/colours"
+	"github.com/r2unit/go-colours"
 )
 
 func ensureDefaultAdmin(db *sql.DB) {
