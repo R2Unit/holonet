@@ -1,0 +1,43 @@
+services:
+
+  postgres:
+     container_name: postgres
+     image: postgres:17-bookworm
+     restart: always
+     environment:
+       POSTGRES_USER: holonet
+       POSTGRES_PASSWORD: insecure
+       POSTGRES_DB: holonet
+     ports:
+       - "5432:5432"
+     volumes:
+       - postgres_data:/var/lib/postgresql/data
+
+  droid:
+    container_name: droid
+    image: ghcr.io/r2unit/holonet-droid:1
+    environment:
+      - WS_URL=ws://holonet:8080/ws
+      - TOKEN=insecure
+      - DROID_NAME=worker01
+      - DEBUG=false
+
+  holonet:
+    container_name: holonet
+    build: .
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=holonet
+      - POSTGRES_PASSWORD=insecure
+      - POSTGRES_DBNAME=holonet
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
