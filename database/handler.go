@@ -29,7 +29,7 @@ func RegisteredTableCount() int {
 	return len(tableMigrations)
 }
 
-// @lorenzo: NewDBHandler initializes a new DBHandler by setting up a connection to the database using environment variables.
+// NewDBHandler initializes a new DBHandler by setting up a connection to the database using environment variables.
 // It attempts to connect with retries and returns an error if the connection cannot be established.
 func NewDBHandler() (*DBHandler, error) {
 	host := os.Getenv("DB_HOST")
@@ -88,7 +88,7 @@ func NewDBHandler() (*DBHandler, error) {
 	return &DBHandler{DB: db}, nil
 }
 
-// @lorenzo: EnsureTable ensures the specified table exists in the database with the required schema and adds missing columns if needed.
+// EnsureTable ensures the specified table exists in the database with the required schema and adds missing columns if needed.
 func (handler *DBHandler) EnsureTable(tableName string, columns map[string]string) error {
 	log.Printf("Ensuring table '%s' exists and has the required schema...", tableName)
 
@@ -132,7 +132,12 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 		if err != nil {
 			return fmt.Errorf("error retrieving columns for table %s: %w", tableName, err)
 		}
-		defer rows.Close()
+		defer func(rows *sql.Rows) {
+			err := rows.Close()
+			if err != nil {
+
+			}
+		}(rows)
 
 		existingColumns := make(map[string]bool)
 		for rows.Next() {
@@ -163,7 +168,7 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 	return nil
 }
 
-// @lorenzo: Migrate performs the database migration by ensuring all registered tables exist and are updated with the correct schema.
+// Migrate performs the database migration by ensuring all registered tables exist and are updated with the correct schema.
 func (handler *DBHandler) Migrate() error {
 	log.Printf("Starting database migration for %d table(s)...", len(tableMigrations))
 	for _, tm := range tableMigrations {
