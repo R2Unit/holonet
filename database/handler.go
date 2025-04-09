@@ -5,32 +5,46 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	_ "github.com/lib/pq"
 )
 
+// DBHandler wraps a *sql.DB instance and provides methods for database operations like ensuring tables and migrations.
 type DBHandler struct {
 	DB *sql.DB
 }
 
+// TableMigration represents a database table schema migration with its name, columns, and processing priority.
 type TableMigration struct {
-	Name    string
-	Columns map[string]string
+	Name     string
+	Columns  map[string]string
+	Priority int
 }
 
+// tableMigrations holds a list of TableMigration objects to manage and apply database table schema migrations.
 var tableMigrations []TableMigration
 
+// RegisterTable adds a TableMigration object to the list of table migrations for setup or processing later.
 func RegisterTable(tm TableMigration) {
 	tableMigrations = append(tableMigrations, tm)
 }
 
+// RegisteredTableCount returns the number of registered table migrations.
 func RegisteredTableCount() int {
 	return len(tableMigrations)
 }
 
-// NewDBHandler initializes a new DBHandler by setting up a connection to the database using environment variables.
-// It attempts to connect with retries and returns an error if the connection cannot be established.
+// SortMigrations arranges tableMigrations in ascending order based on their Priority field.
+func SortMigrations() {
+	sort.Slice(tableMigrations, func(i, j int) bool {
+		return tableMigrations[i].Priority < tableMigrations[j].Priority
+	})
+}
+
+// NewDBHandler initializes a new DBHandler instance by connecting to a PostgreSQL database using environment variables.
+// It attempts multiple retries if the connection fails and returns an error if the connection cannot be established.
 func NewDBHandler() (*DBHandler, error) {
 	host := os.Getenv("DB_HOST")
 	if host == "" {
@@ -88,7 +102,7 @@ func NewDBHandler() (*DBHandler, error) {
 	return &DBHandler{DB: db}, nil
 }
 
-// EnsureTable ensures the specified table exists in the database with the required schema and adds missing columns if needed.
+// EnsureTable ensures a table exists in the database with the specified schema, creating or updating it as needed.
 func (handler *DBHandler) EnsureTable(tableName string, columns map[string]string) error {
 	log.Printf("Ensuring table '%s' exists and has the required schema...", tableName)
 
@@ -135,50 +149,43 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 		defer func(rows *sql.Rows) {
 			err := rows.Close()
 			if err != nil {
-
+				log.Printf("Error closing rows: %v", err)
 			}
 		}(rows)
 
 		existingColumns := make(map[string]bool)
 		for rows.Next() {
-			var colName string
-			if err := rows.Scan(&colName); err != nil {
+			var columnName string
+			if err := rows.Scan(&columnName); err != nil {
 				return fmt.Errorf("error scanning column name for table %s: %w", tableName, err)
 			}
-			existingColumns[colName] = true
-			log.Printf("Found existing column '%s' in table '%s'.", colName, tableName)
+			existingColumns[columnName] = true
 		}
 
 		for col, def := range columns {
 			if !existingColumns[col] {
-				alterTableQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s;", tableName, col, def)
-				log.Printf("Column '%s' is missing in table '%s'. Built ALTER TABLE query: %s", col, tableName, alterTableQuery)
-				log.Printf("Executing ALTER TABLE query for table '%s'...", tableName)
-				if _, err := handler.DB.Exec(alterTableQuery); err != nil {
+				alterQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s;", tableName, col, def)
+				log.Printf("Adding missing column '%s' to table '%s' with query: %s", col, tableName, alterQuery)
+				if _, err := handler.DB.Exec(alterQuery); err != nil {
 					return fmt.Errorf("error adding column %s to table %s: %w", col, tableName, err)
 				}
-				log.Printf("Added missing column '%s' to table '%s'.", col, tableName)
-			} else {
-				log.Printf("Column '%s' exists in table '%s'. No action needed.", col, tableName)
+				log.Printf("Column '%s' added to table '%s'.", col, tableName)
 			}
 		}
-		log.Printf("Table '%s' schema verified and up-to-date.", tableName)
 	}
 
 	return nil
 }
 
-// Migrate performs the database migration by ensuring all registered tables exist and are updated with the correct schema.
-func (handler *DBHandler) Migrate() error {
-	log.Printf("Starting database migration for %d table(s)...", len(tableMigrations))
-	for _, tm := range tableMigrations {
-		log.Printf("Migrating table: %s", tm.Name)
-		if err := handler.EnsureTable(tm.Name, tm.Columns); err != nil {
-			log.Printf("Migration error in table '%s': %v", tm.Name, err)
-			return err
+// MigrateTables iterates over all registered table migrations, sorts them by priority, and applies the migrations in order.
+func (handler *DBHandler) MigrateTables() error {
+	SortMigrations()
+
+	for _, migration := range tableMigrations {
+		log.Printf("Migrating table: %s", migration.Name)
+		if err := handler.EnsureTable(migration.Name, migration.Columns); err != nil {
+			return fmt.Errorf("migration error in table '%s': %w", migration.Name, err)
 		}
-		log.Printf("Finished migrating table: %s", tm.Name)
 	}
-	log.Printf("Database migration completed successfully.")
 	return nil
 }

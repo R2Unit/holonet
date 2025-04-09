@@ -14,7 +14,7 @@ func main() {
 
 	log.Printf("Registered %d table(s) for migration.", database.RegisteredTableCount())
 
-	if err := dbHandler.Migrate(); err != nil {
+	if err := dbHandler.MigrateTables(); err != nil {
 		log.Fatalf("Migration error: %v", err)
 	}
 

@@ -13,6 +13,7 @@ var logsTable = database.TableMigration{
 		"line":       "INTEGER",
 		"created_at": "TIMESTAMP NOT NULL",
 	},
+	Priority: 3,
 }
 
 func init() {
