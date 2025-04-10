@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
+	_ "net/http"
+
 	"github.com/holonet/core/cache"
 	"github.com/holonet/core/database"
 	_ "github.com/holonet/core/database/tables"
-	"log"
+	"github.com/holonet/core/web"
 )
 
 func main() {
@@ -12,6 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize DB: %v", err)
 	}
+
 	log.Printf("Registered %d table(s) for migration.", database.RegisteredTableCount())
 	if err := dbHandler.MigrateTables(); err != nil {
 		log.Fatalf("Migration error: %v", err)
@@ -27,6 +31,8 @@ func main() {
 	log.Println("Cache client connected successfully.")
 
 	go cache.StartHeartbeat(cacheClient)
+
+	go web.StartServer(":3000")
 
 	select {}
 }
