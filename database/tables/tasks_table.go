@@ -5,11 +5,16 @@ import "github.com/holonet/core/database"
 var tasksTable = database.TableMigration{
 	Name: "tasks",
 	Columns: map[string]string{
-		"id":         "SERIAL PRIMARY KEY",
-		"user_id":    "INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE",
-		"task_type":  "VARCHAR(255) NOT NULL",
-		"task_value": "VARCHAR(255) NOT NULL",
-		"created_at": "TIMESTAMP NOT NULL",
+		"id":            "SERIAL PRIMARY KEY",
+		"task_name":     "VARCHAR(255) NOT NULL UNIQUE",
+		"description":   "VARCHAR(255)",
+		"task_type":     "VARCHAR(255) NOT NULL",
+		"task_value":    "VARCHAR(255) NOT NULL",
+		"yaml_template": "TEXT NOT NULL",
+		"enabled":       "BOOLEAN NOT NULL DEFAULT TRUE",
+		"created_at":    "TIMESTAMP NOT NULL",
+		"updated_at":    "TIMESTAMP",
+		"deleted_at":    "TIMESTAMP",
 	},
 	Priority: 3,
 }
