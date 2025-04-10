@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/holonet/core/cache"
 	"github.com/holonet/core/database"
 	_ "github.com/holonet/core/database/tables"
 	"log"
@@ -16,4 +17,16 @@ func main() {
 		log.Fatalf("Migration error: %v", err)
 	}
 	log.Println("Database migrations completed successfully.")
+
+	go dbHandler.StartHeartbeat()
+
+	cacheClient, err := cache.NewCacheClient()
+	if err != nil {
+		log.Fatalf("Cache initialization error: %v", err)
+	}
+	log.Println("Cache client connected successfully.")
+
+	go cache.StartHeartbeat(cacheClient)
+
+	select {}
 }
