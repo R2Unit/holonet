@@ -18,7 +18,7 @@ func (handler *DBHandler) StartHeartbeat() {
 		if err != nil {
 			log.Printf("Heartbeat error: unable to ping the database: %v", err)
 		} else {
-			log.Printf("Heartbeat: Redis at %s is responsive")
+			log.Printf("Heartbeat: Postgres at %s is responsive")
 		}
 
 		time.Sleep(heartbeatInterval)
