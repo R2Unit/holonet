@@ -1,17 +1,10 @@
 # Holonet
-Holonet is a tool to add automation to your digital infrastructure this is network & compute. You can create tasks based on your own scripts such as GoLang, Python, Bash and Ansible.
+Holonet is a projec to visualize and automate Network & Compute. So that there is a baseline of configuration in the network and then also visualize this back to the user.
 
-## Enviremonts
-```bash
+## Documentation
 
-# Database Configuration
-POSTGRES_HOST=
-POSTGRES_PORT=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_DBNAME=
+## Usage
 
-```
+### Step 1:
 
-
-API
+### Step 2: 

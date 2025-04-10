@@ -1,2 +1,2 @@
-# Core 
-Dit is de main executable (straks) voor het project.
+# Holonet Core
+This is where it all happends.
