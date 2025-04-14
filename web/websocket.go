@@ -2,20 +2,55 @@ package web
 
 import (
 	"crypto/sha1"
+	"database/sql"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/holonet/core/database"
+	_ "github.com/lib/pq"
 )
 
-// magicKey is a GUID used in WebSocket handshake to compute the Sec-WebSocket-Accept header value.
-const magicKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+// The magicKey :)
+const magicKey = "258EAFA5-E914-47DA-95CA-"
 
-// webSocketHandshake performs the WebSocket handshake, validating the request and returning a hijacked network connection.
+// validateToken verifies the provided token against the database and checks its expiration status. Returns an error if invalid.
+func validateToken(token string) error {
+	if token == "" {
+		return fmt.Errorf("missing token")
+	}
+
+	var expiresAt time.Time
+	err := database.DB.QueryRow("SELECT expires_at FROM tokens WHERE token = $1", token).Scan(&expiresAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("invalid token")
+		}
+		return fmt.Errorf("error querying token: %v", err)
+	}
+
+	if time.Now().After(expiresAt) {
+		return fmt.Errorf("token expired")
+	}
+
+	return nil
+}
+
+// webSocketHandshake performs a WebSocket handshake, validates the token, and upgrades the HTTP connection.
+// Returns a net.Conn for further communication or an error if the handshake fails.
 func webSocketHandshake(w http.ResponseWriter, r *http.Request) (net.Conn, error) {
+	token := r.URL.Query().Get("token")
+	if err := validateToken(token); err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return nil, err
+	}
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return nil, fmt.Errorf("method not allowed")
@@ -53,25 +88,19 @@ func webSocketHandshake(w http.ResponseWriter, r *http.Request) (net.Conn, error
 		"Connection: Upgrade\r\n"+
 		"Sec-WebSocket-Accept: %s\r\n\r\n", acceptKey)
 	if _, err := buf.WriteString(response); err != nil {
-		err := conn.Close()
-		if err != nil {
-			return nil, err
-		}
+		_ = conn.Close()
 		return nil, err
 	}
 	if err := buf.Flush(); err != nil {
-		err := conn.Close()
-		if err != nil {
-			return nil, err
-		}
+		_ = conn.Close()
 		return nil, err
 	}
 
 	return conn, nil
 }
 
-// writeFrame writes a WebSocket frame with the specified opcode and payload to the given connection.
-// It constructs the frame header based on payload length and writes it followed by the payload.
+// writeFrame writes a WebSocket frame with the given opcode and payload to the provided connection.
+// It handles frame header construction, including payload length encoding, and writes the complete frame to the connection.
 // Returns an error if writing to the connection fails.
 func writeFrame(conn net.Conn, opcode byte, payload []byte) error {
 	fin := byte(0x80)
@@ -96,7 +125,7 @@ func writeFrame(conn net.Conn, opcode byte, payload []byte) error {
 	return err
 }
 
-// readFrame reads a WebSocket frame from the provided connection, parsing its opcode, payload, and handling masking.
+// readFrame reads a WebSocket frame from the given connection and returns the opcode, payload, and any error encountered.
 func readFrame(conn net.Conn) (opcode byte, payload []byte, err error) {
 	header := make([]byte, 2)
 	if _, err = io.ReadFull(conn, header); err != nil {
