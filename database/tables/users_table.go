@@ -14,9 +14,11 @@ var usersTable = database.TableMigration{
 		"last_login":    "TIMESTAMP",
 		//"last_ip":       "VARCHAR(255)",
 		//"group_id":   "INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE"
-		"created_at": "TIMESTAMP NOT NULL",
-		"updated_at": "TIMESTAMP",
-		"deleted_at": "TIMESTAMP",
+		//
+		// <lorenzo> Divider for my eyes only 0_0
+		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 1,
 }

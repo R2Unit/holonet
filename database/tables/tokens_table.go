@@ -9,9 +9,10 @@ var tokensTable = database.TableMigration{
 		"user_id":    "INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE",
 		"token":      "VARCHAR(255) NOT NULL UNIQUE",
 		"expires_at": "TIMESTAMP NOT NULL",
-		"created_at": "TIMESTAMP NOT NULL",
-		"updated_at": "TIMESTAMP",
-		"deleted_at": "TIMESTAMP",
+		// <lorenzo> Divider for my eyes only 0_0
+		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 2,
 }

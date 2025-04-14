@@ -12,9 +12,10 @@ var tasksTable = database.TableMigration{
 		"task_value":    "VARCHAR(255) NOT NULL",
 		"yaml_template": "TEXT NOT NULL",
 		"enabled":       "BOOLEAN NOT NULL DEFAULT TRUE",
-		"created_at":    "TIMESTAMP NOT NULL",
-		"updated_at":    "TIMESTAMP",
-		"deleted_at":    "TIMESTAMP",
+		// <lorenzo> Divider for my eyes only 0_0
+		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 3,
 }
