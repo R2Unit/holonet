@@ -18,9 +18,10 @@ type DBHandler struct {
 
 // TableMigration represents a database table schema migration with its name, columns, and processing priority.
 type TableMigration struct {
-	Name     string
-	Columns  map[string]string
-	Priority int
+	Name        string
+	Columns     map[string]string
+	Priority    int
+	ForeignKeys map[string]string
 }
 
 // tableMigrations holds a list of TableMigration objects to manage and apply database table schema migrations.
