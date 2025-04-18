@@ -17,10 +17,9 @@ var jobsTable = database.TableMigration{
 		"last_error":   "TEXT",
 		"locked_by":    "VARCHAR(255)",
 		"locked_at":    "TIMESTAMP",
-		// <lorenzo> Divider for my eyes only 0_0
-		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
+		"created_at":   "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at":   "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at":   "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 2,
 }
