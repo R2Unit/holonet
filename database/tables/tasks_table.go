@@ -18,6 +18,7 @@ var tasksTable = database.TableMigration{
 		"user_id":    "INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE",
 		"enabled":    "BOOLEAN NOT NULL DEFAULT TRUE",
 		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
 		"deleted_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
 	},
 	Priority: 3,
