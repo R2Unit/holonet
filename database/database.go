@@ -1,34 +1,22 @@
 package database
 
 import (
+	"database/sql"
 	"log"
 
-	"github.com/r2unit/go-colours"
+	_ "github.com/lib/pq"
 )
 
-func InitializeDatabase() {
-	db, err := InitDB()
+var DB *sql.DB
+
+func Init(dataSourceName string) {
+	var err error
+	DB, err = sql.Open("postgres", dataSourceName)
 	if err != nil {
-		log.Fatalf(colours.Error("Database initialization failed: %v"), err)
-		return
+		log.Fatalf("Error connecting to database: %v", err)
 	}
-	defer db.Close()
 
-	log.Println(colours.Success("Database connected successfully!"))
-
-	for tableName, createQuery := range GetTables() {
-		exists, err := TableExists(db, tableName)
-		if err != nil {
-			log.Fatalf(colours.Error("Error checking if table %s exists: %v"), tableName, err)
-		}
-		if !exists {
-			log.Printf(colours.Success("Creating table: %s"), tableName)
-			_, err := db.Exec(createQuery)
-			if err != nil {
-				log.Fatalf(colours.Error("Failed to create table %s: %v"), tableName, err)
-			}
-		} else {
-			log.Printf(colours.Success("Table %s already exists, skipping creation."), tableName)
-		}
+	if err = DB.Ping(); err != nil {
+		log.Fatalf("Error pinging database: %v", err)
 	}
 }
