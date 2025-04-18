@@ -10,10 +10,9 @@ var permissionsTable = database.TableMigration{
 		"permission":  "VARCHAR(255) NOT NULL",
 		"description": "VARCHAR(255)",
 		"is_active":   "BOOLEAN NOT NULL DEFAULT TRUE",
-		// <lorenzo> Divider for my eyes only 0_o
-		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
+		"created_at":  "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at":  "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at":  "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 3,
 }
