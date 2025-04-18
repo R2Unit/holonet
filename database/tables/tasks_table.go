@@ -12,7 +12,7 @@ var tasksTable = database.TableMigration{
 		"task_value":  "VARCHAR(255) NOT NULL",
 		// TODO: Add support for multiple workflow types
 		//"workflow_code": "TEXT",
-		//"workflow_json": "JSONB",
+		"workflow_json": "JSONB",
 		//"workflow_yaml": "TEXT",
 		"priority":   "INTEGER NOT NULL DEFAULT 0",
 		"user_id":    "INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE",
