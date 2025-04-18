@@ -10,10 +10,9 @@ var groupsTable = database.TableMigration{
 		"name":        "VARCHAR(255) NOT NULL UNIQUE",
 		"description": "VARCHAR(255)",
 		"permissions": "TEXT NOT NULL",
-		// <lorenzo> Divider for my eyes only 0_0
-		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
+		"created_at":  "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at":  "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at":  "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	Priority: 3,
 }
