@@ -13,6 +13,10 @@ var queueTable = database.TableMigration{
 		"queued_at":    "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 		"started_at":   "TIMESTAMP",
 		"completed_at": "TIMESTAMP",
+		// <lorenzo> Divider for my eyes only 0_o
+		"created_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"updated_at": "TIMESTAMP NOT NULL DEFAULT NOW()",
+		"deleted_at": "TIMESTAMP  NOT NULL DEFAULT NOW()",
 	},
 	ForeignKeys: map[string]string{
 		"task_id": "REFERENCES tasks(id)",

@@ -11,12 +11,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// DBHandler wraps a *sql.DB instance and provides methods for database operations like ensuring tables and migrations.
 type DBHandler struct {
 	DB *sql.DB
 }
 
-// TableMigration represents a database table schema migration with its name, columns, and processing priority.
 type TableMigration struct {
 	Name        string
 	Columns     map[string]string
@@ -24,20 +22,16 @@ type TableMigration struct {
 	ForeignKeys map[string]string
 }
 
-// tableMigrations holds a list of TableMigration objects to manage and apply database table schema migrations.
 var tableMigrations []TableMigration
 
-// RegisterTable adds a TableMigration object to the list of table migrations for setup or processing later.
 func RegisterTable(tm TableMigration) {
 	tableMigrations = append(tableMigrations, tm)
 }
 
-// RegisteredTableCount returns the number of registered table migrations.
 func RegisteredTableCount() int {
 	return len(tableMigrations)
 }
 
-// SortMigrations arranges tableMigrations in ascending order based on their Priority field.
 func SortMigrations() {
 	sort.Slice(tableMigrations, func(i, j int) bool {
 		return tableMigrations[i].Priority < tableMigrations[j].Priority
