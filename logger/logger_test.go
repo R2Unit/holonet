@@ -32,13 +32,11 @@ func TestSetLogLevel(t *testing.T) {
 }
 
 func TestLogOutput(t *testing.T) {
-	// Capture log output
 	var buf bytes.Buffer
 	originalLogger := logger
-	logger = log.New(&buf, "", 0) // Remove timestamp for easier testing
+	logger = log.New(&buf, "", 0)
 	defer func() { logger = originalLogger }()
 
-	// Test each log level
 	tests := []struct {
 		level       LogLevel
 		logFunc     func(string, ...interface{})
@@ -52,7 +50,6 @@ func TestLogOutput(t *testing.T) {
 		{WARN, Warn, "warn message", true, "[WARN]"},
 	}
 
-	// Set log level to INFO
 	SetLogLevel("info")
 
 	for _, test := range tests {
@@ -74,7 +71,6 @@ func TestLogOutput(t *testing.T) {
 		}
 	}
 
-	// Set log level to DEBUG and test again
 	SetLogLevel("debug")
 	buf.Reset()
 	Debug("debug message")
@@ -85,38 +81,30 @@ func TestLogOutput(t *testing.T) {
 }
 
 func TestEnvironmentVariable(t *testing.T) {
-	// Save original environment and restore it after the test
 	originalEnv := os.Getenv("LOG_LEVEL")
 	defer os.Setenv("LOG_LEVEL", originalEnv)
 
-	// Set environment variable
 	os.Setenv("LOG_LEVEL", "error")
 
-	// Reset currentLevel
 	currentLevel = INFO
 
-	// Capture log output
 	var buf bytes.Buffer
 	originalLogger := logger
 	logger = log.New(&buf, "", 0)
 	defer func() { logger = originalLogger }()
 
-	// Initialize logger (should read from environment)
 	Init()
 
-	// Check that log level was set correctly
 	if currentLevel != ERROR {
 		t.Errorf("Expected log level ERROR, got %v", currentLevel)
 	}
 
-	// Test that INFO messages are not logged
 	buf.Reset()
 	Info("info message")
 	if buf.String() != "" {
 		t.Errorf("Expected no log output for INFO message, got '%s'", buf.String())
 	}
 
-	// Test that ERROR messages are logged
 	buf.Reset()
 	Error("error message")
 	if !strings.Contains(buf.String(), "error message") {
