@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"log"
+	"github.com/holonet/core/logger"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -16,9 +16,9 @@ func StartHeartbeat(client *redis.Client) {
 		cancel()
 
 		if err != nil {
-			log.Printf("Heartbeat error: unable to ping Redis at %s: %v", addr, err)
+			logger.Error("Heartbeat error: unable to ping Redis at %s: %v", addr, err)
 		} else {
-			log.Printf("Heartbeat: Redis at %s is responsive", addr)
+			logger.Debug("Heartbeat: Redis at %s is responsive", addr)
 		}
 
 		time.Sleep(10 * time.Second)
