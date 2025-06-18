@@ -38,8 +38,6 @@ func SortMigrations() {
 	})
 }
 
-// NewDBHandler initializes a new DBHandler instance by connecting to a PostgreSQL database using environment variables.
-// It attempts multiple retries if the connection fails and returns an error if the connection cannot be established.
 func NewDBHandler() (*DBHandler, error) {
 	host := os.Getenv("DB_HOST")
 	if host == "" {
@@ -97,7 +95,6 @@ func NewDBHandler() (*DBHandler, error) {
 	return &DBHandler{DB: db}, nil
 }
 
-// EnsureTable ensures a table exists in the database with the specified schema, creating or updating it as needed.
 func (handler *DBHandler) EnsureTable(tableName string, columns map[string]string) error {
 	log.Printf("Ensuring table '%s' exists and has the required schema...", tableName)
 
@@ -123,7 +120,7 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 			colDefs += fmt.Sprintf("%s %s", col, def)
 			first = false
 		}
-		createTableQuery := fmt.Sprintf("CREATE TABLE %s (%s);", tableName, colDefs)
+		createTableQuery := fmt.Sprintf("CREATE TABLE public.%s (%s);", tableName, colDefs)
 		log.Printf("Built CREATE TABLE query: %s", createTableQuery)
 		log.Printf("Executing CREATE TABLE query for '%s'...", tableName)
 		if _, err := handler.DB.Exec(createTableQuery); err != nil {
@@ -159,7 +156,7 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 
 		for col, def := range columns {
 			if !existingColumns[col] {
-				alterQuery := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s;", tableName, col, def)
+				alterQuery := fmt.Sprintf("ALTER TABLE public.%s ADD COLUMN %s %s;", tableName, col, def)
 				log.Printf("Adding missing column '%s' to table '%s' with query: %s", col, tableName, alterQuery)
 				if _, err := handler.DB.Exec(alterQuery); err != nil {
 					return fmt.Errorf("error adding column %s to table %s: %w", col, tableName, err)
@@ -172,8 +169,14 @@ func (handler *DBHandler) EnsureTable(tableName string, columns map[string]strin
 	return nil
 }
 
-// MigrateTables iterates over all registered table migrations, sorts them by priority, and applies the migrations in order.
 func (handler *DBHandler) MigrateTables() error {
+	log.Printf("Ensuring 'public' schema exists...")
+	_, err := handler.DB.Exec("CREATE SCHEMA IF NOT EXISTS public;")
+	if err != nil {
+		return fmt.Errorf("failed to create public schema: %w", err)
+	}
+	log.Printf("Public schema check completed.")
+
 	SortMigrations()
 
 	for _, migration := range tableMigrations {
