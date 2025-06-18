@@ -4,15 +4,13 @@ import (
 	"context"
 	"github.com/holonet/core/logger"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
-func StartHeartbeat(client *redis.Client) {
+func StartHeartbeat(client CacheClient) {
 	addr := client.Options().Addr
 	for {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		err := client.Ping(ctx).Err()
+		err := client.Ping(ctx)
 		cancel()
 
 		if err != nil {
