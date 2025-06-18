@@ -1,4 +1,44 @@
+COu# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
-.idea
-.idea/dataSources.local.xml
-.idea/holonet.iml
+# Build directories
+bin/
+build/
+tmp/
+dist/
+
+# Go build cache and coverage files
+/.cache/
+/pkg/
+/cover.out
+/coverage.out
+
+# Go modules
+go.sum
+
+# Vendor directory for dependencies (if checked in)
+/vendor/
+
+# Environment variable files
+.env
+.env.*
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Other temporary files
+*.tmp

@@ -1,0 +1,32 @@
+# Exclude version control directories and files
+.git
+.gitignore
+
+# Dockerfile and docker-compose files (if you don't want to copy them into the image)
+Dockerfile*
+docker-compose*
+
+# Environment files
+.env
+.env.*
+
+# Go build artifacts and binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build folders and temporary directories
+bin/
+build/
+tmp/
+pkg/
+
+# Coverage and cache files
+cover.out
+coverage.out
+
+# Vendor folder (if using Go modules, you may want to include this if needed)
+vendor/
