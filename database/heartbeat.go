@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"log"
+	"github.com/holonet/core/logger"
 	"time"
 )
 
@@ -16,9 +16,9 @@ func (handler *DBHandler) StartHeartbeat() {
 		cancel()
 
 		if err != nil {
-			log.Printf("Heartbeat error: unable to ping the database: %v", err)
+			logger.Error("Heartbeat error: unable to ping the database: %v", err)
 		} else {
-			log.Printf("Heartbeat: Postgres at %s is responsive")
+			logger.Debug("Heartbeat: Postgres at %s is responsive")
 		}
 
 		time.Sleep(heartbeatInterval)
