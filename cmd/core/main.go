@@ -1,17 +1,19 @@
 package main
 
 import (
+	"context"
 	_ "net/http"
 
+	"github.com/holonet/core/api"
 	"github.com/holonet/core/cache"
 	"github.com/holonet/core/database"
 	_ "github.com/holonet/core/database/tables"
 	"github.com/holonet/core/logger"
 	"github.com/holonet/core/web"
+	"github.com/holonet/core/workflow"
 )
 
 func main() {
-	// Initialize logger with command line flags
 	logger.Init()
 
 	dbHandler, err := database.NewDBHandler()
@@ -24,6 +26,10 @@ func main() {
 		logger.Fatal("Migration error: %v", err)
 	}
 	logger.Info("Database migrations completed successfully.")
+	// Initialize admin user, group, and token if they don't exist
+	if err := database.InitAdminUser(dbHandler.DB); err != nil {
+		logger.Fatal("Failed to initialize admin user: %v", err)
+	}
 
 	go dbHandler.StartHeartbeat()
 
@@ -34,6 +40,23 @@ func main() {
 	logger.Info("Cache client connected successfully.")
 
 	go cache.StartHeartbeat(cacheClient)
+
+	if err := workflow.Init(dbHandler.DB); err != nil {
+		logger.Fatal("Failed to initialize workflow system: %v", err)
+	}
+	workflowManager := workflow.NewWorkflowManager(dbHandler.DB)
+	workflowExecutor := workflow.NewExecutor(workflowManager)
+
+	api.SetDBHandler(dbHandler)
+	api.SetWorkflowManager(workflowManager)
+
+	api.RegisterWorkflowRoutes()
+
+	api.RegisterPolicyRoutes()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go workflowExecutor.StartExecutionLoop(ctx)
 
 	go web.StartServer(":3000")
 
