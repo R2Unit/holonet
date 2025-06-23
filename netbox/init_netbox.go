@@ -286,7 +286,7 @@ func createRobotUser(gatekeeper *Gatekeeper, superuserGroupID, robotGroupID int)
 		token = gatekeeper.client.Token
 	}
 
-	logger.Info("robot.holonet user created/updated successfully with password: %s", password)
+	logger.Info("robot.holonet user created/updated successfully")
 	return "robot.holonet", password, token, nil
 }
 
