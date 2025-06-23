@@ -1,0 +1,58 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:17-bookworm
+    restart: always
+    environment:
+      POSTGRES_USER: holonet
+      POSTGRES_PASSWORD: insecure
+      POSTGRES_DB: holonet
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  valkey:
+    image: docker.io/bitnami/valkey:8.1
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes # Only allow NO PASSWORD When in Development! :)
+      - VALKEY_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - '6379:6379'
+    volumes:
+      - valkey_data:/bitnami/valkey/data
+
+  holonet:
+    container_name: holonet
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - LOG_LEVEL=info
+      - NETBOX_HOST=http://netbox.example.com:8000
+      - NETBOX_API_TOKEN=your_api_token_here
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=holonet
+      - DB_PASSWORD=insecure
+      - DB_NAME=holonet
+      - CACHE_HOST=valkey
+      - CACHE_PORT=6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - valkey
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  postgres_data:
+    driver: local
+  valkey_data:
+    driver: local
