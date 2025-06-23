@@ -9,6 +9,7 @@ import (
 	"github.com/holonet/core/database"
 	_ "github.com/holonet/core/database/tables"
 	"github.com/holonet/core/logger"
+	"github.com/holonet/core/netbox"
 	"github.com/holonet/core/web"
 	"github.com/holonet/core/workflow"
 )
@@ -59,6 +60,29 @@ func main() {
 	go workflowExecutor.StartExecutionLoop(ctx)
 
 	go web.StartServer(":3000")
+
+	// Initialize NetBox client and gatekeeper after all other initializations
+	netboxClient, err := netbox.New(nil)
+	if err != nil {
+		logger.Error("Failed to initialize NetBox client: %v", err)
+	} else {
+		logger.Info("NetBox client initialized successfully.")
+
+		// Initialize the gatekeeper for API request management
+		gatekeeper := netbox.NewGatekeeper(netboxClient)
+		logger.Info("NetBox gatekeeper initialized successfully.")
+
+		// Initialize NetBox authentication
+		if err := netbox.InitNetboxAuth(netboxClient, gatekeeper, dbHandler.DB); err != nil {
+			logger.Error("Failed to initialize NetBox authentication: %v", err)
+		} else {
+			logger.Info("NetBox authentication initialized successfully.")
+		}
+
+		// Start the heartbeat to monitor NetBox availability
+		netbox.StartHeartbeat(netboxClient)
+		logger.Info("NetBox heartbeat started successfully.")
+	}
 
 	logger.Debug("Main goroutine waiting indefinitely")
 	select {}
