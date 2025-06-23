@@ -12,7 +12,8 @@ var usersTable = database.TableMigration{
 		"last_login":    "TIMESTAMP",
 		"created_at":    "TIMESTAMP NOT NULL DEFAULT NOW()",
 		"updated_at":    "TIMESTAMP NOT NULL DEFAULT NOW()",
-		"deleted_at":    "TIMESTAMP  NOT NULL DEFAULT NOW()",
+		"deleted_at":    "TIMESTAMP",
+		"status":        "VARCHAR(20) NOT NULL DEFAULT 'active'",
 	},
 	Priority: 1,
 }

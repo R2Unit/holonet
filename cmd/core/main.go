@@ -5,6 +5,7 @@ import (
 	_ "net/http"
 
 	"github.com/holonet/core/api"
+	"github.com/holonet/core/api/users"
 	"github.com/holonet/core/cache"
 	"github.com/holonet/core/database"
 	_ "github.com/holonet/core/database/tables"
@@ -50,10 +51,9 @@ func main() {
 
 	api.SetDBHandler(dbHandler)
 	api.SetWorkflowManager(workflowManager)
+	users.SetDBHandler(dbHandler.DB)
 
-	api.RegisterWorkflowRoutes()
-
-	api.RegisterPolicyRoutes()
+	api.RegisterEndpoints()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

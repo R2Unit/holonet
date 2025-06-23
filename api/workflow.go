@@ -16,12 +16,6 @@ func SetWorkflowManager(manager *workflow.WorkflowManager) {
 	workflowManager = manager
 }
 
-func RegisterWorkflowRoutes() {
-	http.HandleFunc("/api/workflows", tokenAuthMiddleware(handleWorkflows))
-	http.HandleFunc("/api/workflows/", tokenAuthMiddleware(handleWorkflowByID))
-	http.HandleFunc("/api/workflows/schedule", tokenAuthMiddleware(handleScheduleWorkflow))
-}
-
 func handleWorkflows(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

@@ -30,8 +30,8 @@ services:
     restart: always
     environment:
       - LOG_LEVEL=info
-      - NETBOX_HOST=http://netbox.example.com:8000
-      - NETBOX_API_TOKEN=your_api_token_here
+      - NETBOX_HOST=http://91.99.147.61:8000
+      - NETBOX_API_TOKEN=9a843df7998dd05921dfb7232bc5d731a7c73ac7
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=holonet
@@ -39,6 +39,9 @@ services:
       - DB_NAME=holonet
       - CACHE_HOST=valkey
       - CACHE_PORT=6379
+      - ADMIN_USERNAME=r2
+      - ADMIN_EMAIL=r2@example.com
+      - ADMIN_PASSWORD=insecure123!
     ports:
       - "3000:3000"
     depends_on:
