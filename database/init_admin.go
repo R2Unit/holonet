@@ -6,14 +6,18 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/holonet/core/logger"
 )
 
 func InitAdminUser(db *sql.DB) error {
+	// Get admin username from environment variable or use default
+	username := getEnvOrDefault("ADMIN_USERNAME", "admin")
+
 	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM users WHERE username = 'admin'").Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", username).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("failed to check if admin user exists: %w", err)
 	}
@@ -33,18 +37,22 @@ func InitAdminUser(db *sql.DB) error {
 		}
 	}()
 
-	logger.Info("Creating admin user")
+	// Get admin user details from environment variables or use defaults
+	email := getEnvOrDefault("ADMIN_EMAIL", "admin@example.com")
+	password := getEnvOrDefault("ADMIN_PASSWORD", "insecure")
+
+	logger.Info("Creating admin user: %s (%s)", username, email)
 	var userID int
-	passwordHash, err := hashPassword("insecure")
+	passwordHash, err := hashPassword(password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	err = tx.QueryRow(`
-		INSERT INTO users (username, email, password_hash, created_at, updated_at, deleted_at)
-		VALUES ('admin', 'admin@example.com', $1, NOW(), NOW(), NOW())
+		INSERT INTO users (username, email, password_hash, created_at, updated_at)
+		VALUES ($1, $2, $3, NOW(), NOW())
 		RETURNING id
-	`, passwordHash).Scan(&userID)
+	`, username, email, passwordHash).Scan(&userID)
 	if err != nil {
 		return fmt.Errorf("failed to create admin user: %w", err)
 	}
@@ -52,8 +60,8 @@ func InitAdminUser(db *sql.DB) error {
 	logger.Info("Creating Super User group")
 	var groupID int
 	err = tx.QueryRow(`
-		INSERT INTO groups (user_id, name, description, permissions, created_at, updated_at, deleted_at)
-		VALUES ($1, 'Super User', 'Administrator group with full permissions', 'admin', NOW(), NOW(), NOW())
+		INSERT INTO groups (user_id, name, description, permissions, created_at, updated_at)
+		VALUES ($1, 'Super User', 'Administrator group with full permissions', 'admin', NOW(), NOW())
 		RETURNING id
 	`, userID).Scan(&groupID)
 	if err != nil {
@@ -69,8 +77,8 @@ func InitAdminUser(db *sql.DB) error {
 	expiresAt := time.Now().AddDate(1, 0, 0)
 
 	_, err = tx.Exec(`
-		INSERT INTO tokens (user_id, token, expires_at, created_at, updated_at, deleted_at)
-		VALUES ($1, $2, $3, NOW(), NOW(), NOW())
+		INSERT INTO tokens (user_id, token, expires_at, created_at, updated_at)
+		VALUES ($1, $2, $3, NOW(), NOW())
 	`, userID, token, expiresAt)
 	if err != nil {
 		return fmt.Errorf("failed to create token for admin user: %w", err)
@@ -96,4 +104,14 @@ func generateRandomToken(length int) (string, error) {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// getEnvOrDefault returns the value of the environment variable if it exists,
+// otherwise it returns the default value
+func getEnvOrDefault(key, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if exists {
+		return value
+	}
+	return defaultValue
 }

@@ -18,12 +18,6 @@ type TokenPolicy struct {
 	Active            bool   `json:"active"`
 }
 
-func RegisterPolicyRoutes() {
-	http.HandleFunc("/api/policies", tokenAuthMiddleware(handlePolicies))
-	http.HandleFunc("/api/policies/", tokenAuthMiddleware(handlePolicyByID))
-	http.HandleFunc("/api/tokens/policy", tokenAuthMiddleware(handleTokenPolicy))
-}
-
 func handlePolicies(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

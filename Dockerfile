@@ -19,9 +19,7 @@ COPY . .
 # Build the main application
 RUN CGO_ENABLED=0 GOOS=linux go build -o holonet-core ./cmd/core
 
-# Build the CLI tool
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/holonet ./cli
-RUN ls -la /app
+# RUN ls -la /app
 
 # Second stage: debian:bookworm-slim
 FROM debian:bookworm-slim
@@ -38,19 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy the binaries from the builder stage
 COPY --from=builder /app/holonet-core /app/
-COPY --from=builder /app/holonet /app/
-RUN chmod +x /app/holonet-core /app/holonet
-
-# Create a wrapper script for the CLI
-RUN echo '#!/bin/sh' > /usr/local/bin/holonet && \
-    echo 'exec /app/holonet "$@"' >> /usr/local/bin/holonet && \
-    chmod +x /usr/local/bin/holonet
-
-# Create a symbolic link in /usr/bin
-RUN ln -sf /app/holonet /usr/bin/holonet
-
-# Verify that everything is set up correctly
-RUN ls -la /app/holonet /usr/local/bin/holonet /usr/bin/holonet
+RUN chmod +x /app/holonet-core
 
 # Set environment variables
 ENV PATH="/usr/local/bin:${PATH}"
@@ -67,6 +53,10 @@ ENV DB_NAME=holonet
 # Cache connection
 ENV VALKEY_HOST=valkey
 ENV VALKEY_PORT=6379
+# Admin user configuration (defaults will be used if not set)
+ENV ADMIN_USERNAME=admin
+ENV ADMIN_EMAIL=admin@example.com
+ENV ADMIN_PASSWORD=insecure
 
 # Expose the port the app runs on
 EXPOSE 3000
