@@ -30,8 +30,8 @@ services:
     restart: always
     environment:
       - LOG_LEVEL=info
-      - NETBOX_HOST=http://91.99.147.61:8000
-      - NETBOX_API_TOKEN=9a843df7998dd05921dfb7232bc5d731a7c73ac7
+      - NETBOX_HOST=https://netbox.example.com
+      - NETBOX_API_TOKEN=EXAMPLE
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=holonet
