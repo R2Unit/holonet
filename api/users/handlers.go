@@ -8,7 +8,6 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// HandleUsers handles GET (list) and POST (create) requests for users
 func HandleUsers(w http.ResponseWriter, r *http.Request) {
 	logger.Info("HandleUsers called with method: %s", r.Method)
 	switch r.Method {
@@ -24,11 +23,9 @@ func HandleUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// HandleUserByID handles GET (read), PUT (update), and DELETE requests for a specific user
 func HandleUserByID(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/api/users/"):]
 
-	// Check if this is a suspend or unsuspend request
 	if strings.HasSuffix(path, "/suspend") {
 		idStr := path[:len(path)-len("/suspend")]
 		id, err := strconv.Atoi(idStr)
@@ -61,7 +58,6 @@ func HandleUserByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Regular user operations
 	id, err := strconv.Atoi(path)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)

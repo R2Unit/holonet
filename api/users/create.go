@@ -7,7 +7,6 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// CreateUser creates a new user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var request UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -15,17 +14,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
 	if request.Username == "" || request.Email == "" || request.Password == "" {
 		http.Error(w, "Username, email, and password are required", http.StatusBadRequest)
 		return
 	}
 
-	// Hash the password (in a real implementation, you would use a proper password hashing function)
-	// For this example, we'll just use a placeholder
 	passwordHash := "hashed_" + request.Password
 
-	// Set default status if not provided
 	status := "active"
 	if request.Status != "" {
 		status = request.Status

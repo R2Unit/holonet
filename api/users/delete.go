@@ -8,7 +8,6 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// DeleteUser soft deletes a user by setting the deleted_at timestamp
 func DeleteUser(w http.ResponseWriter, r *http.Request, id int) {
 	query := `
 		UPDATE users

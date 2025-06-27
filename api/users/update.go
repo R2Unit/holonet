@@ -8,7 +8,6 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// UpdateUser updates a specific user by ID
 func UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
 	var request UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -16,7 +15,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Check if user exists
 	var exists bool
 	err := dbHandler.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND deleted_at IS NULL)", id).Scan(&exists)
 	if err != nil {
@@ -29,7 +27,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Build the update query based on provided fields
 	query := "UPDATE users SET updated_at = NOW()"
 	args := []interface{}{}
 	argIndex := 1
@@ -47,7 +44,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
 	}
 
 	if request.Password != "" {
-		// Hash the password (in a real implementation, you would use a proper password hashing function)
 		passwordHash := "hashed_" + request.Password
 		query += ", password_hash = $" + strconv.Itoa(argIndex)
 		args = append(args, passwordHash)
@@ -70,6 +66,5 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Get the updated user
 	GetUser(w, r, id)
 }

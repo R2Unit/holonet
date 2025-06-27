@@ -10,12 +10,10 @@ import (
 
 var dbHandler *sql.DB
 
-// SetDBHandler sets the database handler for the users package
 func SetDBHandler(db *sql.DB) {
 	dbHandler = db
 }
 
-// GetUsers returns a list of all users
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	logger.Info("GetUsers function called")
 
@@ -58,11 +56,9 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, user)
 	}
 
-	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
 	logger.Info("Content-Type header set to application/json")
 
-	// Return a JSON array with all users
 	err = json.NewEncoder(w).Encode(users)
 	if err != nil {
 		logger.Error("Failed to encode users to JSON: %v", err)
@@ -72,7 +68,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	logger.Info("Successfully encoded users to JSON")
 }
 
-// GetUser returns a specific user by ID
 func GetUser(w http.ResponseWriter, r *http.Request, id int) {
 	query := `
 		SELECT id, username, email, last_login, created_at, updated_at, status

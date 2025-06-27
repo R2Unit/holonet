@@ -7,7 +7,6 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// HandleListUsers handles GET requests to /api/users/list
 func HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -18,7 +17,6 @@ func HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	GetUsers(w, r)
 }
 
-// HandleCreateUser handles POST requests to /api/users/create
 func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -29,14 +27,12 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	CreateUser(w, r)
 }
 
-// HandleGetUser handles GET requests to /api/users/get/{id}
 func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extract the ID from the URL
 	idStr := r.URL.Path[len("/api/users/get/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -48,14 +44,12 @@ func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	GetUser(w, r, id)
 }
 
-// HandleUpdateUser handles PUT requests to /api/users/update/{id}
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extract the ID from the URL
 	idStr := r.URL.Path[len("/api/users/update/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -67,14 +61,12 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	UpdateUser(w, r, id)
 }
 
-// HandleDeleteUser handles DELETE requests to /api/users/delete/{id}
 func HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Extract the ID from the URL
 	idStr := r.URL.Path[len("/api/users/delete/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

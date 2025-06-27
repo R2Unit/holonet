@@ -8,9 +8,7 @@ import (
 	"github.com/holonet/core/logger"
 )
 
-// SuspendUser suspends a user by setting their status to "suspended"
 func SuspendUser(w http.ResponseWriter, r *http.Request, id int) {
-	// Check if user exists
 	var exists bool
 	err := dbHandler.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND deleted_at IS NULL)", id).Scan(&exists)
 	if err != nil {
@@ -23,7 +21,6 @@ func SuspendUser(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Update user status to suspended
 	query := `
 		UPDATE users
 		SET status = 'suspended', updated_at = NOW()
@@ -50,9 +47,7 @@ func SuspendUser(w http.ResponseWriter, r *http.Request, id int) {
 	})
 }
 
-// UnsuspendUser reactivates a suspended user by setting their status to "active"
 func UnsuspendUser(w http.ResponseWriter, r *http.Request, id int) {
-	// Check if user exists
 	var exists bool
 	err := dbHandler.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND deleted_at IS NULL)", id).Scan(&exists)
 	if err != nil {
@@ -65,7 +60,6 @@ func UnsuspendUser(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	// Update user status to active
 	query := `
 		UPDATE users
 		SET status = 'active', updated_at = NOW()
